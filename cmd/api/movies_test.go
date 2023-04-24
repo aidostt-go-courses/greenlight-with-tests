@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"greenlight.bcc/internal/data"
 	"net/http"
 	"testing"
 
@@ -169,6 +168,10 @@ func TestDeleteMovie(t *testing.T) {
 			name:     "Non-existent ID",
 			urlPath:  "/v1/movies/2",
 			wantCode: http.StatusNotFound,
+		}, {
+			name:     "invalid ID",
+			urlPath:  "/v1/movies/txt",
+			wantCode: http.StatusNotFound,
 		},
 	}
 
@@ -242,7 +245,6 @@ func TestUpdateMovie(t *testing.T) {
 			urlPath: "/v1/movies/1",
 			WCode:   http.StatusUnprocessableEntity,
 		},
-		{},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -273,27 +275,39 @@ func TestListMovies(t *testing.T) {
 	app := newTestApplication(t)
 	ts := newTestServer(t, app.routesTest())
 	defer ts.Close()
-	const (
-		validTitle   = "Test Title"
-		validYear    = 2021
-		validRuntime = "105 mins"
-	)
-	validgenres := []string{"action", "adventure"}
+
 	tests := []struct {
-		name   string
-		Title  string
-		genres []string
-		data.Filters
+		name    string
+		urlPath string
+		WCode   int
+		WBody   string
 	}{
 		{
-			name:   "failed validation",
-			Title:  "",
-			genres: validgenres,
+			name:    "invalid page size number",
+			urlPath: "/v1/movies?page_size=-1",
+			WCode:   http.StatusUnprocessableEntity,
+		}, {
+			name:    "invalid page size input",
+			urlPath: "/v1/movies?page_size=txt",
+			WCode:   http.StatusUnprocessableEntity,
 		},
 		{
-			name:   "valid test",
-			Title:  validTitle,
-			genres: validgenres,
+			name:    "valid test",
+			urlPath: "/v1/movies",
+			WCode:   http.StatusOK,
 		},
 	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, _, body := ts.get(t, tt.urlPath)
+
+			assert.Equal(t, code, tt.WCode)
+
+			if tt.WBody != "" {
+				assert.StringContains(t, body, tt.WBody)
+			}
+
+		})
+	}
+
 }
