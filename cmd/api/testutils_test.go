@@ -86,9 +86,12 @@ func (ts *testServer) postForm(t *testing.T, urlPath string, data []byte) (int, 
 	return rs.StatusCode, rs.Header, string(body)
 }
 
-func (ts *testServer) patchForm(t *testing.T, urlPath string, data []byte) (int, http.Header, string) {
+func (ts *testServer) patchForm(t *testing.T, urlPath string, data []byte, method string) (int, http.Header, string) {
+	if method != "PUT" && method != "PATCH" {
+		t.Fatal("Only PUT and PATCH are supported")
+	}
 	reader := bytes.NewReader(data)
-	req, err := http.NewRequest(http.MethodPatch, ts.URL+urlPath, reader)
+	req, err := http.NewRequest(method, ts.URL+urlPath, reader)
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		t.Fatal(err)

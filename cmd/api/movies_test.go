@@ -264,7 +264,7 @@ func TestUpdateMovie(t *testing.T) {
 			if err != nil {
 				t.Fatal("invalid data")
 			}
-			code, _, _ := ts.patchForm(t, tt.urlPath, d)
+			code, _, _ := ts.patchForm(t, tt.urlPath, d, http.MethodPatch)
 			assert.Equal(t, code, tt.WCode)
 
 		})
